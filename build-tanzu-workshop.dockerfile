@@ -11,6 +11,14 @@ RUN echo "Installing System Libraries" \
   && apt-get update \
   && apt-get install -y build-essential python3.6 python3-pip python3-dev bash-completion git curl unzip wget findutils jq vim tree docker.io
 
+# Install TMC CLI
+COPY bin/tmc .
+RUN echo "Installing TMC CLI" \
+  && chmod +x tmc \
+  && mv tmc /usr/local/bin/tmc \
+  && which tmc \
+  && tmc version
+
 # Install Kubectl
 RUN echo "Installing Kubectl" \
   && wget -q https://storage.googleapis.com/kubernetes-release/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl \

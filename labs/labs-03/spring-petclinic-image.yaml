@@ -1,0 +1,21 @@
+apiVersion: kpack.io/v1alpha1
+kind: Image
+metadata:
+  annotations:
+    sidecar.istio.io/inject: "false"
+  name: spring-petclinic
+  namespace: cf-workloads-staging
+spec:
+  tag: harbor.workshop.frankcarta.com/workshop-01/spring-petclinic
+  imageTaggingStrategy: BuildNumber
+  failedBuildHistoryLimit: 10
+  successBuildHistoryLimit: 10
+  cacheSize: 2G
+  serviceAccount: cc-kpack-registry-service-account
+  builder:
+    name: cf-default-builder
+    kind: Builder
+  source:
+    git:
+      url: https://github.com/samarsinghal/spring-petclinic.git
+      revision: main

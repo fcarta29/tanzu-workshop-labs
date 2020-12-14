@@ -52,7 +52,11 @@ To deploy cf-for-k8s as is, the cluster should:
 
 ## Steps to deploy
 
-1. Create a "CF Installation Values" file and configure it<a name="cf-values"></a>:
+1. Clone and initialize this git repository:
+
+git clone https://github.com/cloudfoundry/cf-for-k8s.git -b v1.0.0
+
+2. Create a "CF Installation Values" file and configure it<a name="cf-values"></a>:
 
     Use the included hack-script to generate the install values
 
@@ -60,13 +64,13 @@ To deploy cf-for-k8s as is, the cluster should:
       - **IMPORTANT** Your certificates must include a subject alternative name entry for the internal `*.cf-system.svc.cluster.local` domain in addition to your chosen external domain. 
 
    ```console
-   ./cf-for-k8s/hack/generate-values.sh -d workshop-01.frankcarta.com > cf-values.yml
+   ./cf-for-k8s/hack/generate-values.sh -d <cf-domain> > cf-values.yml
    ```
 
    Replace `<cf-domain>` with _your_ registered DNS domain name(Ex:- workshop-XX.domain.com) for your CF installation.
 
 
-2. Open the file and append the below values at the end. Provide your credentials to an external app registry:
+3. Open the file and append the below values at the end. Provide your credentials to an external app registry:
 
    vi cf-values.yml
 

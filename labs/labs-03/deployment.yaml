@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spring-petclinic
+  namespace: cf-workloads
+  labels:
+    app: spring-petclinic
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: spring-petclinic
+  template:
+    metadata:
+      labels:
+        app: spring-petclinic
+    spec:
+      containers:
+      - name: spring-petclinic
+        image: harbor.workshop.frankcarta.com/workshop-01/spring-petclinic@sha256:a092e6816140918540209e0cfecab94659806d05cbf7156c3abcf7672108bf22
+        ports:
+        - containerPort: 80
+      imagePullSecrets:
+      - name: app-registry-credentials

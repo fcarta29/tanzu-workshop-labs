@@ -52,11 +52,7 @@ To deploy cf-for-k8s as is, the cluster should:
 
 ## Steps to deploy
 
-1. Clone and initialize this git repository:
-
-git clone https://github.com/cloudfoundry/cf-for-k8s.git -b v1.0.0
-
-2. Create a "CF Installation Values" file and configure it<a name="cf-values"></a>:
+1. Create a "CF Installation Values" file and configure it<a name="cf-values"></a>:
 
     Use the included hack-script to generate the install values
 
@@ -70,7 +66,7 @@ git clone https://github.com/cloudfoundry/cf-for-k8s.git -b v1.0.0
    Replace `<cf-domain>` with _your_ registered DNS domain name(Ex:- workshop-XX.domain.com) for your CF installation.
 
 
-3. Open the file and append the below values at the end. Provide your credentials to an external app registry:
+2. Open the file and append the below values at the end. Provide your credentials to an external app registry:
 
    vi cf-values.yml
 
@@ -93,7 +89,7 @@ git clone https://github.com/cloudfoundry/cf-for-k8s.git -b v1.0.0
         enable: true
     ```
 
-4. Run the following commands to install Cloud Foundry on your Kubernetes cluster:
+3. Run the following commands to install Cloud Foundry on your Kubernetes cluster:
 
       1. Render the final K8s template to raw K8s configuration
 
@@ -116,7 +112,7 @@ git clone https://github.com/cloudfoundry/cf-for-k8s.git -b v1.0.0
    ...
    ```
 
-5. Configure DNS on your IaaS provider to point the wildcard subdomain of your system domain and the wildcard subdomain of all apps domains to point to hostname of the Istio Ingress Gateway service. You can retrieve the load balancer of this service by running:
+4. Configure DNS on your IaaS provider to point the wildcard subdomain of your system domain and the wildcard subdomain of all apps domains to point to hostname of the Istio Ingress Gateway service. You can retrieve the load balancer of this service by running:
 
    ```console
    kubectl get svc -n istio-system istio-ingressgateway -o jsonpath='{.status.loadBalancer.ingress[*].hostname}'

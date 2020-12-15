@@ -81,20 +81,20 @@ Each resource in Kubernetes can be defined using a configuration file. For examp
         name: busybox
         spec:
         containers:
-        - args:
+        -   image: busybox
+            name: busybox1
+            resources: {}
+            args:
             - bin/sh
             - -c
             - ls; sleep 3600
-            image: busybox
-            name: busybox1
+        -   image: busybox
+            name: busybox2
             resources: {}
-        - args:
+            args:
             - bin/sh
             - -c
             - echo Hello world; sleep 3600
-            image: busybox
-            name: busybox2
-            resources: {}
         dnsPolicy: ClusterFirst
         restartPolicy: Never
         status: {}
@@ -221,18 +221,9 @@ Get additional details for the pod by using the `<pod-name>` from the above outp
 
 If the containers in the pod generate logs, then they can be seen using the command shown (a fresh nginx does not have logs - check again later once you have accessed the service):
 
-    $ kubectl logs busybox -c busybox1
+    $ kubectl logs busybox -c busybox2
 
-	bin
-    dev
-    etc
-    home
-    proc
-    root
-    sys
-    tmp
-    usr
-    var
+    Hello world
 
 ## Execute a shell on the running pod 
 
@@ -286,9 +277,11 @@ This deployment will create 3 instances of NGINX image.
 
 Run the following command to create Deployment:
 
-    $ kubectl create -f deployment.yaml 
+    $ kubectl create -f deployment.yaml --record
 
     deployment.apps/nginx-deployment created
+
+The --record flag will track changes made through each revision.
 
 To monitor deployment rollout status:
 
@@ -310,7 +303,6 @@ Get the list of running pods:
     $ kubectl get pods
 
     NAME                                READY   STATUS    RESTARTS   AGE
-    busybox                             2/2     Running   0          15m
     nginx-deployment-66b6c48dd5-8bgmw   1/1     Running   0          104s
     nginx-deployment-66b6c48dd5-jkssc   1/1     Running   0          104s
     nginx-deployment-66b6c48dd5-jm29m   1/1     Running   0          104s
@@ -400,11 +392,6 @@ To rollback to a previous version, first check the revision history:
 
     $ kubectl rollout history deployment/nginx-deployment 
     
-    deployment.apps/nginx-deployment 
-    REVISION  CHANGE-CAUSE
-    1         <none>
-    2         <none>
-
 If you only want to rollback to the previous revision, enter the following command:
 
     $ kubectl rollout undo deployment/nginx-deployment
@@ -445,32 +432,33 @@ Pods belong to a service by using a loosely-coupled model where labels are attac
 Let’s create a Deployment first that will create 3 replicas of a pod:
 
     $ cat echo-deployment.yaml
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: echo-deployment
-          spec:
-            replicas: 3
-            selector:
-              matchLabels:
+
+        apiVersion: apps/v1
+        kind: Deployment
+        metadata:
+        name: echo-deployment
+        spec:
+        replicas: 3
+        selector:
+            matchLabels:
+            app: echo-pod
+        template:
+            metadata:
+            labels:
                 app: echo-pod
-            template:
-              metadata:
-                labels:
-                  app: echo-pod
-              spec:
-                containers:
-                - name: echoheaders
-                  image: k8s.gcr.io/echoserver:1.10
-                  imagePullPolicy: IfNotPresent
-                  ports:
-                  - containerPort: 8080
+            spec:
+            containers:
+            - name: echoheaders
+                image: k8s.gcr.io/echoserver:1.10
+                imagePullPolicy: IfNotPresent
+                ports:
+                - containerPort: 8080
 
 This example creates an echo app that responds with HTTP headers from an Elastic Load Balancer.
 
 Type the following to create the deployment:
 
-    $ kubectl create -f echo-deployment.yaml
+    $ kubectl create -f echo-deployment.yaml --record
 
     deployment.apps/echo-deployment created
 
@@ -516,7 +504,6 @@ Get the list of pods:
     $ kubectl get pods 
 
     NAME                                READY   STATUS    RESTARTS   AGE
-    busybox                             2/2     Running   0          31m
     echo-deployment-668cdc9776-j7r2l    1/1     Running   0          2m52s
     echo-deployment-668cdc9776-krfkp    1/1     Running   0          2m52s
     echo-deployment-668cdc9776-q4q2h    1/1     Running   0          2m52s
@@ -568,7 +555,7 @@ Let's create a clusterIP service and expose your services via the Istio Ingress 
 
 Run the following command to create the Service:
 
-    $ kubectl create -f service.yaml
+    $ kubectl create -f service.yaml --record
 
     service/echo-service created
 
@@ -580,13 +567,7 @@ Run the following command to create the Service:
     echo-service   ClusterIP   10.102.198.216   <none>        80/TCP    46h
     kubernetes     ClusterIP   10.96.0.1        <none>        443/TCP   3d7h
 
-The Service is exposed to an IP address inside the cluster. To access it externally, define a Virtual Service to route it via the Istio ingress gateway. 
-
-    $ kubectl create -f virtual-service-echo.yaml
-
-    virtualservice.networking.istio.io/echo created
-
-Now access the deployed service http://echo.workshop-01.frankcarta.com/
+The Service is exposed to an IP address inside the cluster. 
 
 Now, the number of pods in the deployment can be scaled up and down. Or the pods may terminate and restart on a different host. But the service will still be able to target those pods because of the labels attached to the pod and used by the service.
 
@@ -666,6 +647,7 @@ A new namespace can be created using a configuration file or `kubectl`.
         NAME          STATUS    AGE
         default       Active    3h
         dev           Active    12s
+        dev2          Active    10s
         kube-public   Active    3h
         kube-system   Active    3h
 
@@ -733,9 +715,7 @@ You can be queried resources in a namespace by providing an additional switch `-
         $ kubectl get deployments --all-namespaces
         
         NAMESPACE     NAME                  DESIRED   CURRENT   UP-TO-DATE   AVAILABLE   AGE
-        default       nginx-deployment      3         3         3            3           1h
         dev           nginx-deployment-ns   3         3         3            3           1h
-        dev2          nginx-deployment      3         3         3            3           1m
         kube-system   dns-controller        1         1         1            1           5h
         kube-system   kube-dns              2         2         2            2           5h
         kube-system   kube-dns-autoscaler   1         1         1            1           5h

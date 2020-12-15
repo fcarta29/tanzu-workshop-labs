@@ -48,12 +48,23 @@ kubectl get namespace -L istio-injection
 Output:
 
 ```sh
-NAME           STATUS    AGE       ISTIO-INJECTION
-default        Active    1h        enabled
-istio-system   Active    1h        disabled
-kube-public    Active    1h
-kube-system    Active    1h
+NAME                   STATUS   AGE     ISTIO-INJECTION
+bookinfo               Active   35h     
+cf-blobstore           Active   3d7h    enabled
+cf-db                  Active   3d7h    enabled
+cf-system              Active   3d7h    enabled
+cf-workloads           Active   3d7h    enabled
+cf-workloads-staging   Active   3d7h    enabled
+default                Active   4d6h    
+dev                    Active   2d21h   
+istio-system           Active   3d7h    
+kpack                  Active   3d7h    enabled
+kube-node-lease        Active   4d6h    
+kube-public            Active   4d6h    
+kube-system            Active   4d6h    
+vmware-system-tmc      Active   4d5h    
 ```
+
 ### Label namespace for injection
 
  The default Istio installation uses automatic sidecar injection. Label the namespace that will host the application with istio-injection=enabled:
@@ -83,10 +94,11 @@ kubectl get pods -n bookinfo
 Virtual services, along with destination rules, are the key building blocks of Istio’s traffic routing functionality. A virtual service lets you configure how requests are routed to a service within an Istio service mesh, building on the basic connectivity and discovery provided by Istio and your platform. Each virtual service consists of a set of routing rules that are evaluated in order, letting Istio match each given request to the virtual service to a specific real destination within the mesh. Your mesh can require multiple virtual services or none depending on your use case.
 
 
-We will leverage cf-system/istio-ingressgateway gateway we configured as part of TAS4K8s setup. 
+> Note: We will leverage cf-system/istio-ingressgateway gateway we configured as part of TAS4K8s setup. 
+Edit Virtual service host <workshop-XX> before applying on cluster. 
 
 ```sh
-kubectl apply -f virtual-service-productpage -n bookinfo
+kubectl apply -f virtual-service-productpage.yaml -n bookinfo
 ```
 
 Confirm the app is accessible from outside the cluster
@@ -95,10 +107,10 @@ Confirm the app is accessible from outside the cluster
 Kubectl get virtualservice -n bookinfo
 
 NAME       GATEWAYS                             HOSTS                                        AGE
-bookinfo   ["cf-system/istio-ingressgateway"]   ["productpage.workshop-01.frankcarta.com"]   71m
+bookinfo   ["cf-system/istio-ingressgateway"]   ["productpage.workshop-XX.frankcarta.com"]   71m
 ```
 
-Access to http://productpage.workshop-01.frankcarta.com/productpage to view the Bookinfo web page.
+Access to http://productpage.workshop-XX.frankcarta.com/productpage to view the Bookinfo web page.
 
 
 ### Traffic Policy 
@@ -107,14 +119,13 @@ Access to http://productpage.workshop-01.frankcarta.com/productpage to view the 
 
 If you refresh page multiple times you will see calls to reviews service, v1, v2, and v3. 
 
-1. Define virtual servicve to route traffic for all services to v1 instances 
+1. Define virtual service to route traffic for all services to v1 instances 
 
     ```sh
     kubectl apply -f virtual-service-all-v1.yaml -n bookinfo
     ```
 
-    Refresh page and validate the change.
-
+    Refresh page and validate the change, Now only reviews v1 is getting invoked all the time.
 
 
 2. Transfer 50% of the traffic from reviews:v1 to reviews:v3
@@ -123,10 +134,13 @@ If you refresh page multiple times you will see calls to reviews service, v1, v2
     kubectl apply -f virtual-service-reviews-50-v3.yaml -n bookinfo
     ```
 
+    Refresh page and validate the change, reviews v1, v2 are getting invoked.
+
+
 3. Route traffic based of request header, This virtual service routes requests to different versions of a service depending on whether the request comes from a particular user
 
     ```sh
-    kubectl apply -f virtual-service-reviews-header-v2 -n bookinfo
+    kubectl apply -f virtual-service-reviews-header-v2.yaml -n bookinfo
     ```
 with this virtual service review v2 route is applyed to all requests from the user “jason” and all other will hit deployment v1 
     

@@ -70,7 +70,7 @@ $ kubectl get cnbbuilds -n cf-workloads-staging
 
 Check the logs for specific image build by specifying build number. This will list all the phases involved in build process PREPARE, DETECT, ANALYZE, RESTORE, BUILD, EXPORT, and COMPLETION
 ```bash
-$ kp build logs <image-name> -b 3 -n cf-workloads-staging
+$ kp build logs <image-name> -b 1 -n cf-workloads-staging
 ```
 
 ## Creating a Docker image from a Git repository using kpack
@@ -80,6 +80,7 @@ Secret for push access to your registry, Secret for read access to your Git repo
 Service account for your registry and your Git repository credentials.
 
 Finally, create a configuration file for building a Docker image from your Git repository:
+
 
 ```bash
 $ cat spring-petclinic-image.yaml
@@ -92,7 +93,7 @@ $ cat spring-petclinic-image.yaml
     name: spring-petclinic
     namespace: cf-workloads-staging
     spec:
-    tag: harbor.workshop.frankcarta.com/workshop-01/spring-petclinic
+    tag: harbor.workshop.frankcarta.com/workshop-xx/spring-petclinic
     imageTaggingStrategy: BuildNumber
     failedBuildHistoryLimit: 10
     successBuildHistoryLimit: 10
@@ -105,6 +106,8 @@ $ cat spring-petclinic-image.yaml
         git:
         url: https://github.com/samarsinghal/spring-petclinic.git
         revision: main
+
+> Note: Edit spring-petclinic-image.yaml file before applying on cluster. Update tag attribute to reflect correct harbor project <workshop-xx>
 
 $ k create -f spring-petclinic-image.yaml
 ```
@@ -122,14 +125,16 @@ Wait a couple of minutes, and the status will be updated
 $ kubectl get cnbbuilds -n cf-workloads-staging
 ```
 
-Now deploy this build image on the cluster using deployment file. Update image in the deployment file and push it on the cluster
-```bash
-$ cat deployment.yaml
-```
-Update container image in the deployment file and push it on the cluster
+Now deploy this build image on the cluster using deployment file. 
 
 ```bash
-$ kubectl create -f deployment.yaml
+$ cat spring-petclinic-deployment.yaml
+```
+
+> Note: Update container image url in the deployment file and push it on the cluster
+
+```bash
+$ kubectl create -f spring-petclinic-deployment.yaml
 ```
 
 Check the deployment 
@@ -137,4 +142,57 @@ Check the deployment
 $ kubectl get deployment -n cf-workloads
 ```
 
+Now define networking, expose this deployment as service and also define Virtual service to access it externally. 
 
+
+```bash
+$ cat spring-petclinic-image.yaml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: spring-petclinic
+  namespace: cf-workloads
+  labels:
+    app: spring-petclinic
+    service: spring-petclinic
+spec:
+  ports:
+  - port: 8080
+    name: http
+  selector:
+    app: spring-petclinic
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: spring-petclinic
+  namespace: cf-workloads
+spec:
+  hosts:
+  - “spring-petclinic.workshop-XX.frankcarta.com”
+  gateways:
+  - cf-system/istio-ingressgateway
+  http:
+  - route:
+    - destination:
+        host: spring-petclinic
+        port:
+          number: 8080
+
+
+> Note: Edit Virtual service host <workshop-XX> before applying on cluster. 
+
+$ kubectl create -f spring-petclinic-networking.yaml -n cf-workloads
+```
+
+List deployed virtual service to access application url 
+
+```bash
+$ kubectl get virtualservice -n cf-workloads
+```
+Validate the app is reachable:
+
+   ```console
+   curl -k https://spring-petclinic.<domain>
+   ```

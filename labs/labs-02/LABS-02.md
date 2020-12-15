@@ -44,7 +44,7 @@ To deploy cf-for-k8s as is, the cluster should:
   have `NET_ADMIN` and `NET_RAW` capabilities](https://istio.io/latest/docs/ops/deployment/requirements/#required-pod-capabilities)
 - have a CNI plugin (Container Network Interface plugin) that supports network policies (otherwise, the NetworkPolicy resources applied by cf-for-k8s will have no effect)
 - support `LoadBalancer` services
-- most IaaSes come with `metrics-server`, but if yours does not come with one (for example, if you are using `kind`), you will need to include `add_metrics_server_components: true` in your values file.
+- some IaaSes come with `metrics-server`, but if yours does not come with one (for example, if you are using `kind`), you will need to include `add_metrics_server_components: true` in your values file.
 - defines a default StorageClass
   - requires [additional config on vSphere](https://vmware.github.io/vsphere-storage-for-kubernetes/documentation/storageclass.html), for example
 - OCI-compliant container registry
@@ -67,6 +67,8 @@ To deploy cf-for-k8s as is, the cluster should:
 
 
 2. Open the file and append the below values at the end. Provide your credentials to an external app registry:
+
+> Note: Make sure to update repository_prefix(workshop-xx) , username, and password
 
    vi cf-values.yml
 
@@ -199,12 +201,4 @@ To deploy cf-for-k8s as is, the cluster should:
    You should see the following output:
    ```console
    Hello World
-   ```
-
-## Delete the cf-for-k8s deployment (Optional)
-
-You can delete the cf-for-k8s deployment by running the following command:
-
-   ```console
-   kapp delete -a cf
    ```

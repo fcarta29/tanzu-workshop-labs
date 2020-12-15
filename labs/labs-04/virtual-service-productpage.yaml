@@ -4,7 +4,7 @@ metadata:
   name: bookinfo
 spec:
   hosts:
-  - "productpage.workshop-01.frankcarta.com"
+  - "productpage.workshop-XX.frankcarta.com"
   gateways:
   - cf-system/istio-ingressgateway
   http:
